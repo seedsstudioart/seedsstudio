@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Seeds Studio Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: fixed sidebar + work area; tables and tiles on the same grainy dark ground as the site. */
+:root{
+  --ink:#141514;--ink-2:#1b1c1b;--ink-3:#2a2b2a;--ink-4:#363736;
+  --paper:#ececec;--gray:#d9d9d9;--muted:#8f908e;
+  --red:#ff3b3c;--gold:#f5c451;--c-gray:#cfd0ce;--green:#6fc08f;--blue:#7fb2ff;
+  --display:"Inter Tight","Helvetica Neue",Arial,sans-serif;
+  --body:"Instrument Sans","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;overflow-x:clip}
+body{background:var(--ink);color:var(--paper);font:15px/1.55 var(--body)}
+[hidden]{display:none!important}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+button{font:inherit;color:inherit}
+.av{display:inline-block;height:26px;aspect-ratio:260/340;background:var(--c,var(--paper));-webkit-mask:url(frog.png) center/contain no-repeat;mask:url(frog.png) center/contain no-repeat;vertical-align:middle}
+.tag{display:inline-flex;font:600 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;border:1px dashed currentColor;padding:1px 6px;border-radius:3px;white-space:nowrap;opacity:.8}
+.btn{display:inline-flex;align-items:center;gap:8px;font:800 13px var(--display);letter-spacing:.04em;text-transform:uppercase;text-decoration:none;padding:9px 16px;border-radius:999px;border:2px solid var(--ink-4);background:transparent;cursor:pointer;transition:.2s;white-space:nowrap}
+.btn:hover{border-color:var(--paper)}
+.btn.red{background:var(--red);border-color:var(--red);color:#fff}
+.btn.red:hover{background:#fff;color:var(--red);border-color:#fff}
+.btn.sm{padding:5px 10px;font-size:11px}
+.btn.danger{border-color:rgba(255,59,60,.5);color:var(--red)}
+.btn.danger:hover{background:var(--red);color:#fff}
+.btn[disabled]{opacity:.45;pointer-events:none}
+input,select,textarea{font:14px var(--body);color:var(--paper);background:var(--ink-2);border:1px solid var(--ink-3);border-radius:8px;padding:9px 11px;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--red);outline:none}
+label{display:grid;gap:4px;font:600 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1,h2,h3{font-family:var(--display);letter-spacing:-.03em;margin:0}
+
+/* gate */
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left,0px))}
+.gate form{width:min(380px,100%);background:var(--ink-2);border:1px solid var(--ink-3);border-radius:16px;padding:28px;display:grid;gap:14px;text-align:center}
+.gate .av{height:80px;--c:var(--red);justify-self:center}
+.gate h1{font-size:28px}
+.gate p{margin:0;color:var(--muted);font-size:13px}
+.err{color:var(--red);font-size:13px;margin:0}
+.ok{color:var(--green);font-size:13px;margin:0}
+
+/* shell */
+.app{display:grid;grid-template-columns:230px minmax(0,1fr);min-height:100vh}
+aside{position:sticky;top:0;height:100vh;background:var(--ink-2);border-right:1px solid var(--ink-3);padding:22px 14px;display:flex;flex-direction:column;gap:22px}
+.brand{display:flex;align-items:center;gap:8px;color:var(--red);font:900 18px/.82 var(--display);letter-spacing:-.05em;text-decoration:none;padding:0 8px}
+.brand .av{height:38px;--c:var(--red)}
+.brand small{display:block;font:600 10px var(--mono);letter-spacing:.12em;color:var(--muted);margin-top:6px;text-transform:uppercase}
+.side{display:grid;gap:2px}
+.side a{display:flex;align-items:center;justify-content:space-between;text-decoration:none;padding:10px 12px;border-radius:8px;font-weight:600;color:var(--gray)}
+.side a:hover{background:var(--ink-3)}
+.side a[aria-current="page"]{background:var(--paper);color:var(--ink)}
+.side a b{font:600 11px var(--mono);background:var(--ink);color:var(--gold);padding:1px 7px;border-radius:999px}
+.side a[aria-current="page"] b{background:var(--ink-3)}
+.side-foot{margin-top:auto;display:grid;gap:8px}
+.side-foot a{color:var(--muted);font-size:13px;text-decoration:none;padding:0 12px}
+.side-foot a:hover{color:var(--paper)}
+main{padding:26px max(16px,env(safe-area-inset-right,0px)) 60px clamp(16px,3vw,36px);min-width:0}
+.note{display:flex;gap:10px;align-items:flex-start;background:rgba(245,196,81,.08);border:1px solid rgba(245,196,81,.35);color:var(--gold);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:22px}
+.note b{color:var(--paper)}
+.top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:14px;margin-bottom:22px}
+.top h1{font-size:clamp(28px,3.4vw,40px)}
+.top p{margin:4px 0 0;color:var(--muted)}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  aside{position:sticky;top:0;height:auto;z-index:10;flex-direction:row;align-items:center;gap:10px;padding:10px max(16px,env(safe-area-inset-left,0px));overflow-x:auto}
+  .brand small,.side-foot{display:none}
+  .side{display:flex;gap:4px}
+  .side a{padding:8px 10px;white-space:nowrap}
+}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:22px}
+.tile{background:var(--ink-2);border:1px solid var(--ink-3);border-radius:12px;padding:16px}
+.tile small{display:block;color:var(--muted);font-size:12px}
+.tile strong{font:900 30px/1.1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.tile em{display:block;font-style:normal;color:var(--muted);font-size:12px;margin-top:2px}
+.tile.gold strong{color:var(--gold)}.tile.red strong{color:var(--red)}.tile.green strong{color:var(--green)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:1000px){.cols{grid-template-columns:1fr}}
+.panel{background:var(--ink-2);border:1px solid var(--ink-3);border-radius:12px;padding:18px;display:grid;gap:14px;align-content:start}
+.panel h2{font-size:20px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.bar{display:flex;height:14px;border-radius:999px;overflow:hidden;background:var(--ink-3)}
+.bar span{display:block;height:100%}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font:600 12px var(--mono);color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.feed{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.feed li{display:flex;justify-content:space-between;gap:10px;font-size:14px;border-bottom:1px solid var(--ink-3);padding-bottom:8px}
+.feed li:last-child{border:0;padding:0}
+.feed time{color:var(--muted);font:500 11px var(--mono);white-space:nowrap}
+.empty{color:var(--muted);font-size:14px;margin:0}
+
+/* tables */
+.tools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.tools input,.tools select{width:auto;min-width:200px}
+.tw{overflow-x:auto;background:var(--ink-2);border:1px solid var(--ink-3);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th{font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:11px 14px;border-bottom:1px solid var(--ink-3);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--ink-3);vertical-align:middle;font-size:14px}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+.who{display:flex;gap:10px;align-items:center}
+.who small,.sub{display:block;color:var(--muted);font-size:12px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:6px;font:700 11px var(--mono);letter-spacing:.04em;padding:3px 9px;border-radius:999px;border:1px solid var(--pc,var(--ink-4));color:var(--pc,var(--gray));white-space:nowrap}
+.pill.sr{--pc:var(--gold)}.pill.r{--pc:var(--red)}.pill.c{--pc:var(--c-gray)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+td select{width:auto;padding:5px 8px;font-size:13px}
+.st-antre{--pc:var(--muted)}.st-sketsa{--pc:var(--blue)}.st-render{--pc:var(--gold)}.st-selesai{--pc:var(--green)}.st-batal{--pc:var(--red)}
+
+/* forms */
+.grid-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.grid-form .full{grid-column:1/-1}
+@media (max-width:760px){.grid-form{grid-template-columns:1fr}}
+.rates{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.rates label span{color:var(--paper);font:800 16px var(--display);letter-spacing:-.01em;text-transform:none}
+.sum{font:600 13px var(--mono)}
+@media (max-width:560px){.rates{grid-template-columns:1fr}}
+.confirm{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--red)}
+</style>
+</head>
+<body>
+
+<!-- PIN gate -->
+<div class="gate" id="gate" hidden>
+  <form id="gate-form" novalidate>
+    <i class="av" aria-hidden="true"></i>
+    <h1>Panel Admin</h1>
+    <p id="gate-msg">Masukkan PIN admin untuk lanjut.</p>
+    <label>PIN<input type="password" id="pin" inputmode="numeric" autocomplete="current-password"></label>
+    <p class="err" id="gate-err" hidden></p>
+    <button class="btn red" type="submit" style="justify-content:center">Masuk</button>
+    <p>PIN ini hanya penghalang sementara, bukan keamanan sungguhan. Panel ini wajib dilindungi login server saat backend siap.</p>
+  </form>
+</div>
+
+<div class="app" id="app" hidden>
+  <aside>
+    <a class="brand" href="index.html"><i class="av" aria-hidden="true"></i><span>Seeds<br>Studio.<small>Admin</small></span></a>
+    <nav class="side" id="side">
+      <a href="#ringkasan">Ringkasan</a>
+      <a href="#pengguna">Pengguna <b id="n-users">0</b></a>
+      <a href="#pesanan">Pesanan <b id="n-orders">0</b></a>
+      <a href="#gacha">Pengaturan Gacha</a>
+      <a href="#data">Data</a>
+    </nav>
+    <div class="side-foot"><a href="index.html">← Ke website</a><a href="#" id="lock">Kunci panel</a></div>
+  </aside>
+
+  <main>
+    <div class="note"><span>⚠</span><span><b>Versi sementara.</b> Semua data di panel ini tersimpan di browser ini saja. Pengguna yang mendaftar di perangkat lain belum muncul di sini sampai server backend tersambung. Pakai menu <b>Data → Ekspor</b> untuk memindahkan data nanti.</span></div>
+
+    <!-- RINGKASAN -->
+    <section id="v-ringkasan" data-view>
+      <div class="top"><div><h1>Ringkasan</h1><p>Kondisi studio hari ini.</p></div></div>
+      <div class="tiles" id="tiles"></div>
+      <div class="cols">
+        <div class="panel"><h2>Hasil gacha</h2><div class="bar" id="dist"></div><div class="legend" id="dist-legend"></div></div>
+        <div class="panel"><h2>Aktivitas terbaru</h2><ul class="feed" id="feed"></ul></div>
+      </div>
+    </section>
+
+    <!-- PENGGUNA -->
+    <section id="v-pengguna" data-view hidden>
+      <div class="top"><div><h1>Pengguna</h1><p>Akun yang terdaftar untuk Seeds Gacha.</p></div></div>
+      <div class="tools">
+        <input type="search" id="u-q" placeholder="Cari nama, handle, atau email">
+        <select id="u-f"><option value="all">Semua</option><option value="unclaimed">Hadiah belum diklaim</option><option value="claimed">Sudah diklaim</option><option value="nopull">Belum gacha</option></select>
+      </div>
+      <div class="tw"><table><thead><tr><th>Pengguna</th><th>Email</th><th>Bergabung</th><th>Hadiah</th><th>Klaim</th><th style="text-align:right">Aksi</th></tr></thead><tbody id="u-rows"></tbody></table></div>
+    </section>
+
+    <!-- PESANAN -->
+    <section id="v-pesanan" data-view hidden>
+      <div class="top"><div><h1>Pesanan</h1><p>Catat commission yang masuk dan pantau statusnya.</p></div></div>
+      <form class="panel grid-form" id="o-form" novalidate style="margin-bottom:16px">
+        <h2 class="full">Tambah pesanan</h2>
+        <label>Klien<input id="o-client" placeholder="Nama klien"></label>
+        <label>Kontak<input id="o-contact" placeholder="@handle / email"></label>
+        <label>Layanan<select id="o-service"><option>Live2D Model</option><option>Anime Illust</option><option>Background</option><option>Stinger</option><option>Paket</option></select></label>
+        <label>Harga (Rp)<input id="o-price" inputmode="numeric" placeholder="650000"></label>
+        <label>Status<select id="o-status"></select></label>
+        <label>Akun gacha (opsional)<select id="o-user"><option value="">Tanpa akun</option></select></label>
+        <label class="full">Catatan<textarea id="o-notes" rows="2" placeholder="Detail brief, deadline, hadiah gacha yang diklaim…"></textarea></label>
+        <p class="err full" id="o-err" hidden></p>
+        <div class="full"><button class="btn red" type="submit">Simpan pesanan</button></div>
+      </form>
+      <div class="tools"><select id="o-f"><option value="all">Semua status</option></select><span class="sub" id="o-sum"></span></div>
+      <div class="tw"><table><thead><tr><th>Klien</th><th>Layanan</th><th>Harga</th><th>Status</th><th>Tanggal</th><th style="text-align:right">Aksi</th></tr></thead><tbody id="o-rows"></tbody></table></div>
+    </section>
+
+    <!-- GACHA -->
+    <section id="v-gacha" data-view hidden>
+      <div class="top"><div><h1>Pengaturan Gacha</h1><p>Peluang tiap hadiah. Berlaku di website untuk pengunjung browser ini sampai backend siap.</p></div></div>
+      <form class="panel" id="g-form" novalidate style="max-width:760px">
+        <div class="rates">
+          <label><span style="color:var(--gold)">SR · Extra 1 Expression</span><input id="g-sr" type="number" min="0" max="100" step="1"></label>
+          <label><span style="color:var(--red)">R · Free 1 Emote</span><input id="g-r" type="number" min="0" max="100" step="1"></label>
+          <label><span>C · Free Assets</span><input id="g-c" type="number" min="0" max="100" step="1"></label>
+        </div>
+        <div class="bar" id="g-bar"></div>
+        <p class="sum" id="g-sum"></p>
+        <div><button class="btn red" type="submit" id="g-save">Simpan peluang</button> <span id="g-ok" class="ok" hidden>Tersimpan.</span></div>
+      </form>
+      <form class="panel" id="pin-form" novalidate style="max-width:760px;margin-top:16px">
+        <h2>PIN admin</h2>
+        <label>PIN baru (minimal 4 karakter)<input type="password" id="pin-new" autocomplete="new-password"></label>
+        <p class="err" id="pin-err" hidden></p><p class="ok" id="pin-ok" hidden>PIN diganti.</p>
+        <div><button class="btn" type="submit">Ganti PIN</button></div>
+      </form>
+    </section>
+
+    <!-- DATA -->
+    <section id="v-data" data-view hidden>
+      <div class="top"><div><h1>Data</h1><p>Cadangkan, pindahkan, atau kosongkan data sementara.</p></div></div>
+      <div class="cols">
+        <div class="panel"><h2>Ekspor</h2><p class="empty">Unduh semua data (pengguna, pesanan, pengaturan) sebagai file JSON. File ini nanti bisa diimpor ke database backend.</p><div><button class="btn red" type="button" id="d-export">Unduh JSON</button></div></div>
+        <div class="panel"><h2>Impor</h2><p class="empty">Ganti data di browser ini dengan isi file JSON hasil ekspor.</p><input type="file" id="d-file" accept="application/json,.json"><p class="err" id="d-err" hidden></p><p class="ok" id="d-ok" hidden></p></div>
+        <div class="panel"><h2>Data contoh</h2><p class="empty">Isi panel dengan beberapa pengguna dan pesanan contoh untuk melihat tampilannya. Semua diberi label "contoh".</p><div><button class="btn" type="button" id="d-seed">Tambah data contoh</button></div></div>
+        <div class="panel"><h2>Kosongkan</h2><p class="empty">Hapus semua pengguna, pesanan, dan pengaturan di browser ini. Tidak bisa dibatalkan.</p><div id="d-reset-wrap"><button class="btn danger" type="button" id="d-reset">Kosongkan data</button></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="store.js"></script>
+<script>
+(()=>{
+  const DB=window.SeedsLocalDB;
+  const $=id=>document.getElementById(id);
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const AV=['#ff3b3c','#d9d9d9','#f5c451','#6fc08f'];
+  const PRIZE={sr:{rar:'SR',title:'Extra 1 Expression',c:'var(--gold)'},r:{rar:'R',title:'Free 1 Emote',c:'var(--red)'},c:{rar:'C',title:'Free Assets',c:'var(--c-gray)'}};
+  const STATUS=[['antre','Antre'],['sketsa','Sketsa'],['render','Render'],['selesai','Selesai'],['batal','Batal']];
+  const SL=Object.fromEntries(STATUS);
+  const rp=n=>'Rp '+(+n||0).toLocaleString('id-ID');
+  const dt=t=>t?new Date(t).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}):'-';
+  const dtt=t=>t?new Date(t).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'-';
+  const S={users:[],orders:[],rates:{sr:10,r:30,c:60}};
+
+  /* ---------- PIN gate (sementara) ---------- */
+  const sha=async t=>{try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('seeds:'+t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}catch(_){return 'plain:'+t}};
+  const DEFAULT_PIN='seeds2026';
+  async function gate(){
+    let ok=false;try{ok=sessionStorage.getItem('seeds-admin')==='1'}catch(_){}
+    if(ok)return start();
+    $('gate').hidden=false;
+    const cfg=(await DB.doc('settings/admin').get()).data();
+    if(!cfg)$('gate-msg').innerHTML='PIN awal: <b style="color:var(--paper)">'+DEFAULT_PIN+'</b>. Segera ganti di Pengaturan Gacha.';
+    $('pin').focus();
+    $('gate-form').onsubmit=async e=>{
+      e.preventDefault();const v=$('pin').value;const want=cfg?cfg.pinHash:await sha(DEFAULT_PIN);
+      if(await sha(v)!==want){$('gate-err').textContent='PIN salah.';$('gate-err').hidden=false;return}
+      try{sessionStorage.setItem('seeds-admin','1')}catch(_){}
+      $('gate').hidden=true;start();
+    };
+  }
+  $('lock').onclick=e=>{e.preventDefault();try{sessionStorage.removeItem('seeds-admin')}catch(_){}location.reload()};
+
+  /* ---------- routing ---------- */
+  const views=['ringkasan','pengguna','pesanan','gacha','data'];
+  function route(){
+    const v=views.includes(location.hash.slice(1))?location.hash.slice(1):'ringkasan';
+    document.querySelectorAll('[data-view]').forEach(s=>s.hidden=s.id!=='v-'+v);
+    document.querySelectorAll('#side a').forEach(a=>a.getAttribute('href')==='#'+v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+    window.scrollTo(0,0);
+  }
+
+  function start(){
+    $('app').hidden=false;route();addEventListener('hashchange',route);
+    $('o-status').innerHTML=STATUS.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
+    $('o-f').innerHTML='<option value="all">Semua status</option>'+STATUS.map(([k,l])=>`<option value="${k}">${l}</option>`).join('');
+    DB.collection('players').onSnapshot(s=>{S.users=s.docs.map(d=>({id:d.id,...d.data()}));renderAll()});
+    DB.collection('orders').onSnapshot(s=>{S.orders=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));renderAll()});
+    DB.doc('settings/gacha').onSnapshot(s=>{if(s.exists)S.rates=s.data();fillRates()});
+  }
+  function renderAll(){$('n-users').textContent=S.users.length;$('n-orders').textContent=S.orders.filter(o=>!['selesai','batal'].includes(o.status)).length;renderSummary();renderUsers();renderOrders();fillUserSelect()}
+
+  /* ---------- ringkasan ---------- */
+  function renderSummary(){
+    const pulls=S.users.flatMap(u=>(u.history||[]).map(h=>({...h,u})));
+    const unclaimed=S.users.filter(u=>(u.history||[]).length&&!u.claimed).length;
+    const active=S.orders.filter(o=>!['selesai','batal'].includes(o.status)).length;
+    const income=S.orders.filter(o=>o.status==='selesai').reduce((a,o)=>a+(+o.price||0),0);
+    $('tiles').innerHTML=[
+      ['Pengguna',S.users.length,'akun terdaftar',''],
+      ['Gacha dibuka',pulls.length,'dari '+S.users.length+' kesempatan','gold'],
+      ['Hadiah belum diklaim',unclaimed,'perlu dicek saat order','red'],
+      ['Pesanan aktif',active,S.orders.length+' pesanan total',''],
+      ['Pendapatan selesai',rp(income),'dari pesanan berstatus selesai','green']
+    ].map(([l,v,e,c])=>`<div class="tile ${c}"><small>${l}</small><strong>${v}</strong><em>${e}</em></div>`).join('');
+    const cnt={sr:0,r:0,c:0};pulls.forEach(p=>cnt[p.id]!=null&&cnt[p.id]++);const tot=pulls.length||1;
+    $('dist').innerHTML=pulls.length?['sr','r','c'].map(k=>`<span style="width:${cnt[k]/tot*100}%;background:${PRIZE[k].c}" title="${PRIZE[k].rar}: ${cnt[k]}"></span>`).join(''):'';
+    $('dist-legend').innerHTML=pulls.length?['sr','r','c'].map(k=>`<span><i style="background:${PRIZE[k].c}"></i>${PRIZE[k].rar} ${cnt[k]} (${Math.round(cnt[k]/tot*100)}%)</span>`).join(''):'<span>Belum ada gacha yang dibuka.</span>';
+    const ev=[...S.users.map(u=>({t:u.createdAt,txt:`<b>${esc(u.nick)}</b> mendaftar`})),...pulls.map(p=>({t:p.at,txt:`<b>${esc(p.u.nick)}</b> dapat ${esc(PRIZE[p.id]?.title)}`})),...S.orders.map(o=>({t:o.createdAt,txt:`Pesanan <b>${esc(o.service)}</b> dari ${esc(o.client)}`}))].filter(x=>x.t).sort((a,b)=>b.t-a.t).slice(0,8);
+    $('feed').innerHTML=ev.length?ev.map(x=>`<li><span>${x.txt}</span><time>${dtt(x.t)}</time></li>`).join(''):'<li class="empty">Belum ada aktivitas.</li>';
+  }
+
+  /* ---------- pengguna ---------- */
+  let pendingDel=null;
+  $('u-q').oninput=renderUsers;$('u-f').onchange=renderUsers;
+  function renderUsers(){
+    const q=$('u-q').value.trim().toLowerCase(),f=$('u-f').value;
+    const list=S.users.filter(u=>{
+      const h=(u.history||[])[0];
+      if(f==='unclaimed'&&!(h&&!u.claimed))return false;
+      if(f==='claimed'&&!(h&&u.claimed))return false;
+      if(f==='nopull'&&h)return false;
+      return !q||[u.nick,u.handle,u.email].some(x=>String(x||'').toLowerCase().includes(q));
+    }).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    $('u-rows').innerHTML=list.length?list.map(u=>{const h=(u.history||[])[0];
+      return `<tr>
+        <td><div class="who"><i class="av" style="--c:${AV[u.avatar]||AV[0]}"></i><div>${esc(u.nick)} ${u.sample?'<span class="tag">contoh</span>':''}<small>${esc(u.handle)||'tanpa handle'}</small></div></div></td>
+        <td>${esc(u.email)||'<span class="sub">-</span>'}</td>
+        <td class="num">${dt(u.createdAt)}</td>
+        <td>${h?`<span class="pill ${h.id}">${PRIZE[h.id].rar}</span> ${esc(PRIZE[h.id].title)}<span class="sub">${dtt(h.at)}</span>`:'<span class="sub">Belum gacha</span>'}</td>
+        <td>${h?`<button class="btn sm" data-a="claim" data-id="${esc(u.id)}">${u.claimed?'✓ Diklaim':'Tandai diklaim'}</button>`:'-'}</td>
+        <td><div class="acts">${pendingDel===u.id?`<span class="confirm">Hapus akun ini? <button class="btn sm danger" data-a="del-yes" data-id="${esc(u.id)}">Hapus</button><button class="btn sm" data-a="del-no">Batal</button></span>`:
+          `<button class="btn sm" data-a="reset" data-id="${esc(u.id)}" ${h?'':'disabled'}>Reset gacha</button><button class="btn sm danger" data-a="del" data-id="${esc(u.id)}">Hapus</button>`}</div></td></tr>`}).join('')
+      :`<tr><td colspan="6" class="empty">${S.users.length?'Tidak ada yang cocok dengan pencarian.':'Belum ada pengguna. Akun yang dibuat di website (di browser ini) akan muncul di sini.'}</td></tr>`;
+  }
+  $('u-rows').onclick=async e=>{
+    const b=e.target.closest('button[data-a]');if(!b)return;const id=b.dataset.id,a=b.dataset.a,u=S.users.find(x=>x.id===id);
+    if(a==='claim')await DB.doc('players/'+id).update({claimed:!u.claimed});
+    if(a==='reset')await DB.doc('players/'+id).update({used:0,history:[],claimed:false});
+    if(a==='del'){pendingDel=id;renderUsers()}
+    if(a==='del-no'){pendingDel=null;renderUsers()}
+    if(a==='del-yes'){pendingDel=null;await DB.doc('players/'+id).delete()}
+  };
+
+  /* ---------- pesanan ---------- */
+  function fillUserSelect(){const cur=$('o-user').value;$('o-user').innerHTML='<option value="">Tanpa akun</option>'+S.users.map(u=>`<option value="${esc(u.id)}">${esc(u.nick)}${(u.history||[])[0]&&!u.claimed?' · punya hadiah':''}</option>`).join('');$('o-user').value=cur}
+  $('o-form').onsubmit=async e=>{
+    e.preventDefault();const client=$('o-client').value.trim(),price=+String($('o-price').value).replace(/\D/g,'');
+    if(!client){$('o-err').textContent='Isi nama klien.';$('o-err').hidden=false;return}
+    $('o-err').hidden=true;
+    await DB.collection('orders').add({client,contact:$('o-contact').value.trim(),service:$('o-service').value,price,status:$('o-status').value,user:$('o-user').value,notes:$('o-notes').value.trim(),createdAt:Date.now()});
+    ['o-client','o-contact','o-price','o-notes'].forEach(i=>$(i).value='');$('o-user').value='';
+  };
+  $('o-f').onchange=renderOrders;
+  let pendingO=null;
+  function renderOrders(){
+    const f=$('o-f').value,list=S.orders.filter(o=>f==='all'||o.status===f);
+    $('o-sum').textContent=list.length+' pesanan · total '+rp(list.reduce((a,o)=>a+(+o.price||0),0));
+    $('o-rows').innerHTML=list.length?list.map(o=>{const u=S.users.find(x=>x.id===o.user);
+      return `<tr>
+        <td>${esc(o.client)} ${o.sample?'<span class="tag">contoh</span>':''}<span class="sub">${esc(o.contact)||'-'}${u?' · akun '+esc(u.nick):''}</span>${o.notes?`<span class="sub">${esc(o.notes)}</span>`:''}</td>
+        <td>${esc(o.service)}</td>
+        <td class="num">${rp(o.price)}</td>
+        <td><select data-o="${esc(o.id)}" aria-label="Status">${STATUS.map(([k,l])=>`<option value="${k}" ${o.status===k?'selected':''}>${l}</option>`).join('')}</select> <span class="pill st-${o.status}">${SL[o.status]||o.status}</span></td>
+        <td class="num">${dt(o.createdAt)}</td>
+        <td><div class="acts">${pendingO===o.id?`<span class="confirm">Hapus? <button class="btn sm danger" data-x="yes" data-id="${esc(o.id)}">Hapus</button><button class="btn sm" data-x="no">Batal</button></span>`:`<button class="btn sm danger" data-x="del" data-id="${esc(o.id)}">Hapus</button>`}</div></td></tr>`}).join('')
+      :'<tr><td colspan="6" class="empty">Belum ada pesanan. Tambahkan lewat form di atas.</td></tr>';
+  }
+  $('o-rows').onchange=e=>{const s=e.target.closest('select[data-o]');if(s)DB.doc('orders/'+s.dataset.o).update({status:s.value})};
+  $('o-rows').onclick=async e=>{const b=e.target.closest('button[data-x]');if(!b)return;
+    if(b.dataset.x==='del'){pendingO=b.dataset.id;renderOrders()}
+    if(b.dataset.x==='no'){pendingO=null;renderOrders()}
+    if(b.dataset.x==='yes'){pendingO=null;await DB.doc('orders/'+b.dataset.id).delete()}};
+
+  /* ---------- gacha ---------- */
+  function fillRates(){['sr','r','c'].forEach(k=>$('g-'+k).value=S.rates[k]);previewRates()}
+  function previewRates(){
+    const v={sr:+$('g-sr').value||0,r:+$('g-r').value||0,c:+$('g-c').value||0},t=v.sr+v.r+v.c;
+    $('g-bar').innerHTML=t?['sr','r','c'].map(k=>`<span style="width:${v[k]/t*100}%;background:${PRIZE[k].c}"></span>`).join(''):'';
+    $('g-sum').textContent='Total: '+t+'%'+(t===100?' ✓':' · harus tepat 100%');$('g-sum').style.color=t===100?'var(--green)':'var(--red)';
+    $('g-save').disabled=t!==100;
+  }
+  ['g-sr','g-r','g-c'].forEach(i=>$(i).oninput=previewRates);
+  $('g-form').onsubmit=async e=>{e.preventDefault();await DB.doc('settings/gacha').set({sr:+$('g-sr').value,r:+$('g-r').value,c:+$('g-c').value});$('g-ok').hidden=false;setTimeout(()=>$('g-ok').hidden=true,2500)};
+  $('pin-form').onsubmit=async e=>{e.preventDefault();const v=$('pin-new').value;
+    if(v.length<4){$('pin-err').textContent='PIN minimal 4 karakter.';$('pin-err').hidden=false;return}
+    $('pin-err').hidden=true;await DB.doc('settings/admin').set({pinHash:await sha(v)});$('pin-new').value='';$('pin-ok').hidden=false;setTimeout(()=>$('pin-ok').hidden=true,2500)};
+
+  /* ---------- data ---------- */
+  $('d-export').onclick=()=>{
+    const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),data:DB.exportAll()},null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='seeds-data-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  };
+  $('d-file').onchange=async e=>{
+    const f=e.target.files[0];if(!f)return;$('d-err').hidden=$('d-ok').hidden=true;
+    try{const j=JSON.parse(await f.text());const data=j.data||j;if(typeof data!=='object'||Array.isArray(data))throw 0;
+      DB.importAll(data);$('d-ok').textContent='Data diimpor: '+Object.keys(data).length+' dokumen.';$('d-ok').hidden=false}
+    catch(_){$('d-err').textContent='File tidak bisa dibaca. Pastikan ini file JSON hasil ekspor panel ini.';$('d-err').hidden=false}
+    e.target.value='';
+  };
+  $('d-seed').onclick=async()=>{
+    const now=Date.now(),H=36e5;
+    const us=[['Kodok Samurai','@kodoksamurai','kodok@contoh.id',0,'sr',false],['Mochi VT','@mochivt','mochi@contoh.id',2,'r',true],['Ren','@ren.art','ren@contoh.id',1,'c',false],['Yuki','','yuki@contoh.id',3,null,false]];
+    for(const [i,u] of us.entries())await DB.doc('players/sample_'+i).set({nick:u[0],handle:u[1],email:u[2],avatar:u[3],createdAt:now-(i+2)*20*H,used:u[4]?1:0,history:u[4]?[{id:u[4],at:now-(i+1)*10*H}]:[],claimed:u[5],sample:true});
+    const os=[['Mochi VT','@mochivt','Live2D Model',7500000,'render','sample_1'],['Ren','@ren.art','Anime Illust',650000,'selesai','sample_2'],['Aria','aria@contoh.id','Stinger',500000,'antre','']];
+    for(const [i,o] of os.entries())await DB.doc('orders/sample_'+i).set({client:o[0],contact:o[1],service:o[2],price:o[3],status:o[4],user:o[5],notes:'',createdAt:now-(i+1)*30*H,sample:true});
+  };
+  function restoreReset(){$('d-reset-wrap').innerHTML='<button class="btn danger" type="button" id="d-reset">Kosongkan data</button>';bindReset()}
+  function bindReset(){$('d-reset').onclick=()=>{$('d-reset-wrap').innerHTML='<span class="confirm">Yakin hapus semua data di browser ini? <button class="btn sm danger" id="d-yes">Ya, kosongkan</button><button class="btn sm" id="d-no">Batal</button></span>';
+    $('d-yes').onclick=()=>{const pin=DB.exportAll()['settings/admin'];DB.reset();if(pin)DB.doc('settings/admin').set(pin);restoreReset()};$('d-no').onclick=restoreReset}}
+  bindReset();
+
+  gate();
+})();
+</script>
+</body>
+</html>

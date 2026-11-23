@@ -597,9 +597,9 @@ footer{padding-block:40px 44px;border-top:1px solid var(--ink-3)}
         <div class="result" id="result" hidden></div>
         <div class="rates">
           <h3>Peluang <span class="tag">contoh</span></h3>
-          <div class="rate sr"><b>SR</b><span>Extra 1 Expression</span><em>10%</em></div>
-          <div class="rate r"><b>R</b><span>Free 1 Emote</span><em>30%</em></div>
-          <div class="rate c"><b>C</b><span>Free Assets</span><em>60%</em></div>
+          <div class="rate sr"><b>SR</b><span>Extra 1 Expression</span><em id="rate-sr">10%</em></div>
+          <div class="rate r"><b>R</b><span>Free 1 Emote</span><em id="rate-r">30%</em></div>
+          <div class="rate c"><b>C</b><span>Free Assets</span><em id="rate-c">60%</em></div>
         </div>
       </div>
     </div>
@@ -652,6 +652,7 @@ footer{padding-block:40px 44px;border-top:1px solid var(--ink-3)}
   </div>
 </footer>
 
+<script src="store.js"></script>
 <script>
 (()=>{
   const t=document.getElementById('track');
@@ -696,7 +697,11 @@ footer{padding-block:40px 44px;border-top:1px solid var(--ink-3)}
   const stage=document.getElementById('stage'),pack=document.getElementById('pack'),pull=document.getElementById('pull'),
         btn=document.getElementById('open'),res=document.getElementById('result'),cnt=document.getElementById('cnt');
   let n=0,busy=false;
-  const roll=()=>{const x=Math.random()*100;return x<10?'sr':x<40?'r':'c'};
+  // peluang gacha: diatur dari panel admin (settings/gacha), default 10/30/60
+  const RATES={sr:10,r:30,c:60};
+  try{const g=window.SeedsLocalDB&&window.SeedsLocalDB.exportAll()['settings/gacha'];if(g&&g.sr+g.r+g.c>0)Object.assign(RATES,{sr:+g.sr,r:+g.r,c:+g.c})}catch(_){}
+  ['sr','r','c'].forEach(k=>{const el=document.getElementById('rate-'+k);if(el)el.textContent=RATES[k]+'%'});
+  const roll=()=>{const t=RATES.sr+RATES.r+RATES.c,x=Math.random()*t;return x<RATES.sr?'sr':x<RATES.sr+RATES.r?'r':'c'};
   const wait=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
   const colors={sr:'var(--gold)',r:'var(--red)',c:'var(--c-gray)'};
   /* ---------- akun (1 akun = 1x gacha) ---------- */
@@ -759,7 +764,7 @@ footer{padding-block:40px 44px;border-top:1px solid var(--ink-3)}
       <p class="err" id="lg-err" hidden></p>
       <button class="btn red" type="submit">Masuk</button>
     </form>`}
-    <p class="proto">Prototipe: email dan password belum dikirim atau disimpan. Di website asli, bagian ini tersambung ke database pengguna. Di sini akun memakai login claude.ai kamu.</p>`;
+    <p class="proto">Versi sementara: akun disimpan di browser ini saja dan password belum disimpan. Nanti bagian ini tersambung ke server login Seeds Studio.</p>`;
     document.getElementById('t-daftar').onclick=()=>{tab='daftar';lgTouched=true;renderLogin()};
     document.getElementById('t-masuk').onclick=()=>{tab='masuk';lgTouched=true;renderLogin()};
     document.getElementById('f-daftar')?.addEventListener('submit',signup);
@@ -778,9 +783,9 @@ footer{padding-block:40px 44px;border-top:1px solid var(--ink-3)}
     if(mode()!=='signup')return showErr('Prototipe ini butuh login claude.ai untuk menyimpan akun. Buka halaman ini dalam keadaan login.');
     const b=document.getElementById('su-btn');b.disabled=true;b.textContent='Membuat akun…';
     try{
-      // email & password are intentionally NOT stored in this prototype
+      // password is intentionally NOT stored until a real backend handles auth
       setOut(false);ACC.flash='';
-      await ACC.db.doc('players/'+ACC.uid).set({nick,handle,avatar:av,createdAt:Date.now(),used:0,history:[],claimed:false});
+      await ACC.db.doc('players/'+ACC.uid).set({nick,handle,email,avatar:av,createdAt:Date.now(),used:0,history:[],claimed:false});
       location.hash='#gacha';
     }catch(x){
       showErr(x?.code==='invalid_argument'?'Akunmu hanya punya akses lihat di halaman ini. Minta studio memberi akses Contributor.':'Gagal membuat akun. Coba lagi sebentar.');
@@ -797,7 +802,7 @@ footer{padding-block:40px 44px;border-top:1px solid var(--ink-3)}
   async function recordPull(id){
     if(mode()!=='player')return;
     const m=ACC.me;
-    const data={nick:m.nick,handle:m.handle,avatar:m.avatar,createdAt:m.createdAt,used:(m.used||0)+1,history:[{id,at:Date.now()},...(m.history||[])].slice(0,5),claimed:!!m.claimed};
+    const data={nick:m.nick,handle:m.handle,email:m.email||'',avatar:m.avatar,createdAt:m.createdAt,used:(m.used||0)+1,history:[{id,at:Date.now()},...(m.history||[])].slice(0,5),claimed:!!m.claimed};
     try{await ACC.db.doc('players/'+ACC.uid).set(data)}catch(x){res.insertAdjacentHTML('beforeend','<p class="err" style="margin-top:6px">Hasil belum tersimpan ke akun. Screenshot kartu ini sebagai bukti.</p>')}
   }
 
@@ -869,12 +874,16 @@ footer{padding-block:40px 44px;border-top:1px solid var(--ink-3)}
     const use=n=>window.claude?.use?Promise.resolve(window.claude.use(n)).catch(()=>null):Promise.resolve(null);
     const [db,user]=await Promise.all([use('db'),use('user')]);
     ACC.db=db;ACC.uid=user?await user.id():null;ACC.admin=user?await user.canEdit():false;
-    if(!db||!ACC.uid){ACC.state='demo';renderAcct();return}
+    if((!db||!ACC.uid)&&window.SeedsLocalDB&&window.SeedsLocalDB.uid()){ // website mode: simpan di browser sampai backend siap
+      ACC.local=true;ACC.db=window.SeedsLocalDB;ACC.uid=window.SeedsLocalDB.uid();ACC.admin=false;
+    }
+    if(!ACC.db||!ACC.uid){ACC.state='demo';renderAcct();return}
+    const db2=ACC.db;
     let first=true;const timer=setTimeout(()=>{if(first){ACC.state='slow';renderAcct()}},10000);
-    db.doc('players/'+ACC.uid).onSnapshot(s=>{ACC.me=s.exists?s.data():null;if(first&&!s.metadata.fromCache){first=false;clearTimeout(timer);ACC.state='ready'}if(!first)renderAcct()},()=>{clearTimeout(timer);first=false;ACC.state='demo';renderAcct()});
+    db2.doc('players/'+ACC.uid).onSnapshot(s=>{ACC.me=s.exists?s.data():null;if(first&&!s.metadata.fromCache){first=false;clearTimeout(timer);ACC.state='ready'}if(!first)renderAcct()},()=>{clearTimeout(timer);first=false;ACC.state='demo';renderAcct()});
     if(ACC.admin){
       document.getElementById('admin').hidden=false;
-      db.collection('players').onSnapshot(s=>{ACC.players=s.docs;renderAdmin()},()=>{});
+      db2.collection('players').onSnapshot(s=>{ACC.players=s.docs;renderAdmin()},()=>{});
     }
   })();
   renderAcct();
